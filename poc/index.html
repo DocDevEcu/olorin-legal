@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
-<title>Olorin — 3D proof of concept</title>
+<title>Olorin — morphing 3D proof of concept</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;1,300&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
@@ -12,27 +12,22 @@
   :root{ --bg:#060507; --ink:#CFC7B7; --bright:#F3ECDE; --muted:#8B8374; --peri:#9AA6D4; --gold:#D8C199;
     --serif:'Cormorant Garamond',Georgia,serif; --sans:'Inter',-apple-system,sans-serif; }
   *{margin:0;padding:0;box-sizing:border-box}
-  html,body{background:var(--bg);color:var(--ink);font-family:var(--sans);height:100%}
-  body{overflow-x:hidden}
+  html,body{background:var(--bg);color:var(--ink);font-family:var(--sans)}
   #c{position:fixed;inset:0;z-index:0;display:block}
-  .vign{position:fixed;inset:0;z-index:1;pointer-events:none;background:radial-gradient(ellipse at center,transparent 45%,rgba(0,0,0,.6))}
+  .vign{position:fixed;inset:0;z-index:1;pointer-events:none;background:radial-gradient(ellipse at center,transparent 40%,rgba(0,0,0,.65))}
   .grain{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.05;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
-  .content{position:relative;z-index:2;pointer-events:none}
-  nav{position:fixed;top:0;left:0;right:0;z-index:3;display:flex;justify-content:space-between;align-items:center;padding:22px 30px;pointer-events:auto}
+  nav{position:fixed;top:0;left:0;right:0;z-index:4;display:flex;justify-content:space-between;padding:22px 30px}
   .brand{font-family:var(--serif);letter-spacing:5px;text-transform:uppercase;font-size:15px;color:var(--bright)}
   .brand span{color:var(--peri)}
   .tag{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--muted)}
-  .hero{height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;text-align:center;padding:0 24px 12vh}
-  .eyebrow{font-size:11px;letter-spacing:4px;text-transform:uppercase;color:var(--peri);margin-bottom:22px}
-  h1{font-family:var(--serif);font-weight:300;font-size:clamp(40px,7vw,84px);line-height:1.04;color:var(--bright);letter-spacing:-.5px}
-  h1 em{font-style:italic;color:var(--gold)}
-  .cue{margin-top:34px;font-size:10.5px;letter-spacing:3px;text-transform:uppercase;color:var(--muted)}
-  .cue::after{content:"";display:block;width:1px;height:40px;margin:12px auto 0;background:linear-gradient(var(--muted),transparent);animation:drop 2.2s ease-in-out infinite}
-  @keyframes drop{0%{transform:scaleY(0);transform-origin:top}45%{transform:scaleY(1);transform-origin:top}55%{transform:scaleY(1);transform-origin:bottom}100%{transform:scaleY(0);transform-origin:bottom}}
-  .second{height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 24px}
-  .second p{font-family:var(--serif);font-style:italic;font-size:clamp(22px,3.4vw,34px);color:var(--bright);max-width:20ch;line-height:1.4}
-  .btn{pointer-events:auto;margin-top:34px;font-size:13px;letter-spacing:1px;color:var(--bg);background:linear-gradient(135deg,#EBD9AD,#C9AE7E);padding:16px 38px;border-radius:100px;text-decoration:none;display:inline-block}
-  .note{position:fixed;bottom:20px;left:0;right:0;z-index:3;text-align:center;font-size:11px;color:#4a463f;letter-spacing:1px}
+  main{position:relative;z-index:2}
+  .sec{height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;text-align:center;padding:0 24px 12vh}
+  .k{font-size:11px;letter-spacing:4px;text-transform:uppercase;color:var(--peri);margin-bottom:16px;text-shadow:0 2px 20px #000}
+  .t{font-family:var(--serif);font-weight:300;font-size:clamp(34px,6vw,68px);line-height:1.05;color:var(--bright);letter-spacing:-.5px;text-shadow:0 2px 30px rgba(0,0,0,.7)}
+  .t em{font-style:italic;color:var(--gold)}
+  .l{margin-top:16px;font-size:15px;color:var(--muted);max-width:42ch;line-height:1.6;text-shadow:0 2px 20px #000}
+  .cue{position:fixed;bottom:22px;left:0;right:0;z-index:4;text-align:center;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#4a463f}
+  #rail{position:fixed;top:0;left:0;height:2px;width:0;z-index:5;background:linear-gradient(90deg,var(--peri),var(--gold))}
   #fallback{position:fixed;inset:0;z-index:0;background:radial-gradient(ellipse at 50% 40%,#1a1430,#060507 70%);display:none}
 </style>
 </head>
@@ -40,21 +35,18 @@
 <canvas id="c"></canvas>
 <div id="fallback"></div>
 <div class="vign"></div><div class="grain"></div>
+<div id="rail"></div>
+<nav><div class="brand">Olo<span>rin</span></div><div class="tag">Morphing 3D · proof of concept</div></nav>
 
-<nav><div class="brand">Olo<span>rin</span></div><div class="tag">3D · proof of concept</div></nav>
-
-<div class="content">
-  <section class="hero">
-    <div class="eyebrow">The one who listens within</div>
-    <h1>Meet the mind<br><em>beneath your mind.</em></h1>
-    <div class="cue">Move your cursor · scroll</div>
-  </section>
-  <section class="second">
-    <p>"Who looks outside, dreams; who looks inside, awakes."</p>
-    <a class="btn" href="#">Request early access</a>
-  </section>
-</div>
-<div class="note">Proof of concept — generative 3D, no stock assets. Cursor rotates it; scrolling morphs &amp; warms it.</div>
+<main>
+  <section class="sec"><div class="k">The one who listens within</div><h2 class="t">The listening <em>mind.</em></h2><p class="l">A calm, breathing form — the self, at rest and attentive.</p></section>
+  <section class="sec"><div class="k">01 · The Dream</div><h2 class="t">A <em>fragment</em>, already fading.</h2><p class="l">The form drifts and breaks into lobes — half-remembered pieces.</p></section>
+  <section class="sec"><div class="k">02 · The Shadow</div><h2 class="t">Something <em>dark</em> upon its back.</h2><p class="l">It sharpens, spikes, turns turbulent — the figure that has followed you.</p></section>
+  <section class="sec"><div class="k">03 · The Stillness</div><h2 class="t">Learn to simply <em>watch.</em></h2><p class="l">It smooths, and breathes in slow concentric waves.</p></section>
+  <section class="sec"><div class="k">04 · The Commons</div><h2 class="t">You were <em>never alone.</em></h2><p class="l">It gathers into many soft lobes — a cluster of minds.</p></section>
+  <section class="sec"><div class="k">05 · The Return</div><h2 class="t">No longer <em>nameless.</em></h2><p class="l">It settles, warms to gold, and pulses with a quiet light.</p></section>
+</main>
+<div class="cue">Scroll — the form becomes each idea</div>
 
 <script type="importmap">
 { "imports": {
@@ -67,133 +59,94 @@
   import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
   import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
   import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
-
   var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   try {
-    var canvas = document.getElementById('c');
-    var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
-    renderer.setPixelRatio(Math.min(devicePixelRatio, 1.6));
-    renderer.setSize(innerWidth, innerHeight);
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;   // hold colour in the bright rim instead of clipping to white
-    renderer.toneMappingExposure = 1.05;
+    var canvas=document.getElementById('c');
+    var renderer=new THREE.WebGLRenderer({canvas:canvas,antialias:true,alpha:true});
+    renderer.setPixelRatio(Math.min(devicePixelRatio,1.6)); renderer.setSize(innerWidth,innerHeight);
+    renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.05;
+    var scene=new THREE.Scene();
+    var camera=new THREE.PerspectiveCamera(45,innerWidth/innerHeight,0.1,100); camera.position.z=5.2;
 
-    var scene = new THREE.Scene();
-    var camera = new THREE.PerspectiveCamera(45, innerWidth/innerHeight, 0.1, 100);
-    camera.position.z = 5.4;
-
-    var NOISE = `
+    var NOISE=`
       vec4 permute(vec4 x){return mod(((x*34.0)+1.0)*x,289.0);}
       vec4 taylorInvSqrt(vec4 r){return 1.79284291400159-0.85373472095314*r;}
-      float snoise(vec3 v){
-        const vec2 C=vec2(1.0/6.0,1.0/3.0); const vec4 D=vec4(0.0,0.5,1.0,2.0);
-        vec3 i=floor(v+dot(v,C.yyy)); vec3 x0=v-i+dot(i,C.xxx);
-        vec3 g=step(x0.yzx,x0.xyz); vec3 l=1.0-g; vec3 i1=min(g.xyz,l.zxy); vec3 i2=max(g.xyz,l.zxy);
-        vec3 x1=x0-i1+C.xxx; vec3 x2=x0-i2+2.0*C.xxx; vec3 x3=x0-1.0+3.0*C.xxx;
-        i=mod(i,289.0);
+      float snoise(vec3 v){const vec2 C=vec2(1.0/6.0,1.0/3.0);const vec4 D=vec4(0.0,0.5,1.0,2.0);
+        vec3 i=floor(v+dot(v,C.yyy));vec3 x0=v-i+dot(i,C.xxx);
+        vec3 g=step(x0.yzx,x0.xyz);vec3 l=1.0-g;vec3 i1=min(g.xyz,l.zxy);vec3 i2=max(g.xyz,l.zxy);
+        vec3 x1=x0-i1+C.xxx;vec3 x2=x0-i2+2.0*C.xxx;vec3 x3=x0-1.0+3.0*C.xxx;i=mod(i,289.0);
         vec4 p=permute(permute(permute(i.z+vec4(0.0,i1.z,i2.z,1.0))+i.y+vec4(0.0,i1.y,i2.y,1.0))+i.x+vec4(0.0,i1.x,i2.x,1.0));
-        float n_=1.0/7.0; vec3 ns=n_*D.wyz-D.xzx;
-        vec4 j=p-49.0*floor(p*ns.z*ns.z);
-        vec4 x_=floor(j*ns.z); vec4 y_=floor(j-7.0*x_);
-        vec4 x=x_*ns.x+ns.yyyy; vec4 y=y_*ns.x+ns.yyyy; vec4 h=1.0-abs(x)-abs(y);
-        vec4 b0=vec4(x.xy,y.xy); vec4 b1=vec4(x.zw,y.zw);
-        vec4 s0=floor(b0)*2.0+1.0; vec4 s1=floor(b1)*2.0+1.0; vec4 sh=-step(h,vec4(0.0));
-        vec4 a0=b0.xzyw+s0.xzyw*sh.xxyy; vec4 a1=b1.xzyw+s1.xzyw*sh.zzww;
-        vec3 p0=vec3(a0.xy,h.x); vec3 p1=vec3(a0.zw,h.y); vec3 p2=vec3(a1.xy,h.z); vec3 p3=vec3(a1.zw,h.w);
-        vec4 norm=taylorInvSqrt(vec4(dot(p0,p0),dot(p1,p1),dot(p2,p2),dot(p3,p3)));
-        p0*=norm.x;p1*=norm.y;p2*=norm.z;p3*=norm.w;
-        vec4 m=max(0.6-vec4(dot(x0,x0),dot(x1,x1),dot(x2,x2),dot(x3,x3)),0.0); m=m*m;
-        return 42.0*dot(m*m,vec4(dot(p0,x0),dot(p1,x1),dot(p2,x2),dot(p3,x3)));
-      }`;
+        float n_=1.0/7.0;vec3 ns=n_*D.wyz-D.xzx;vec4 j=p-49.0*floor(p*ns.z*ns.z);
+        vec4 x_=floor(j*ns.z);vec4 y_=floor(j-7.0*x_);vec4 x=x_*ns.x+ns.yyyy;vec4 y=y_*ns.x+ns.yyyy;vec4 h=1.0-abs(x)-abs(y);
+        vec4 b0=vec4(x.xy,y.xy);vec4 b1=vec4(x.zw,y.zw);vec4 s0=floor(b0)*2.0+1.0;vec4 s1=floor(b1)*2.0+1.0;vec4 sh=-step(h,vec4(0.0));
+        vec4 a0=b0.xzyw+s0.xzyw*sh.xxyy;vec4 a1=b1.xzyw+s1.xzyw*sh.zzww;
+        vec3 p0=vec3(a0.xy,h.x);vec3 p1=vec3(a0.zw,h.y);vec3 p2=vec3(a1.xy,h.z);vec3 p3=vec3(a1.zw,h.w);
+        vec4 norm=taylorInvSqrt(vec4(dot(p0,p0),dot(p1,p1),dot(p2,p2),dot(p3,p3)));p0*=norm.x;p1*=norm.y;p2*=norm.z;p3*=norm.w;
+        vec4 m=max(0.6-vec4(dot(x0,x0),dot(x1,x1),dot(x2,x2),dot(x3,x3)),0.0);m=m*m;
+        return 42.0*dot(m*m,vec4(dot(p0,x0),dot(p1,x1),dot(p2,x2),dot(p3,x3)));}`;
 
-    var uniforms = { uTime:{value:0}, uScroll:{value:0} };
-    var mat = new THREE.ShaderMaterial({
-      uniforms: uniforms,
-      vertexShader: NOISE + `
-        uniform float uTime; uniform float uScroll;
-        varying float vFres;
+    var u={ uTime:{value:0}, uSpike:{value:0.1}, uRipple:{value:0.0}, uLump:{value:0.12}, uWarm:{value:0.0}, uPulse:{value:0.3} };
+    var mat=new THREE.ShaderMaterial({ uniforms:u,
+      vertexShader:NOISE+`
+        uniform float uTime,uSpike,uRipple,uLump,uPulse; varying float vFres;
         void main(){
-          vec3 pos = position;
-          float t = uTime*0.28;
-          float freq = 1.5 + uScroll*1.8;
-          float amp  = 0.16 + uScroll*0.42;
-          float d = snoise(normalize(position)*freq + vec3(0.0,0.0,t));
-          d += 0.5*snoise(normalize(position)*freq*2.1 + vec3(t*0.7));
-          pos += normal * d * amp;
-          vec4 mv = modelViewMatrix * vec4(pos,1.0);
-          vec3 n = normalize(normalMatrix * normal);
-          vec3 viewDir = normalize(-mv.xyz);
-          vFres = pow(1.0 - max(dot(n,viewDir),0.0), 2.4);
-          gl_Position = projectionMatrix * mv;
+          vec3 nrm=normalize(position); float t=uTime*0.3; float d=0.0;
+          d += uLump  * snoise(nrm*1.4 + vec3(0.0,0.0,t*0.7));
+          d += uSpike * (snoise(nrm*3.6 + vec3(t*0.6))*0.6 + snoise(nrm*6.5 - vec3(t*0.4))*0.4);
+          d += uRipple* sin(nrm.y*9.0 - t*2.2)*0.5;
+          vec3 pos = position + normal*d;
+          pos *= 1.0 + uPulse*sin(t*1.4)*0.05;
+          vec4 mv=modelViewMatrix*vec4(pos,1.0);
+          vec3 n=normalize(normalMatrix*normal); vec3 vd=normalize(-mv.xyz);
+          vFres=pow(1.0-max(dot(n,vd),0.0),2.4);
+          gl_Position=projectionMatrix*mv;
         }`,
-      fragmentShader: `
-        uniform float uScroll;
-        varying float vFres;
+      fragmentShader:`
+        uniform float uWarm; varying float vFres;
         void main(){
-          vec3 core = vec3(0.07,0.06,0.16);
-          vec3 rimA = vec3(0.60,0.66,0.96);
-          vec3 rimB = vec3(0.96,0.80,0.52);
-          vec3 rim = mix(rimA, rimB, clamp(uScroll*1.2,0.0,1.0));
-          vec3 iri = 0.5 + 0.5*cos(6.28318*(vFres*1.3 + vec3(0.0,0.33,0.66)));
-          vec3 col = mix(core, rim, vFres);
-          col += iri * vFres * 0.28;
-          col += rim * pow(vFres, 3.5) * 0.9;
-          gl_FragColor = vec4(col, 1.0);
+          vec3 core=vec3(0.07,0.06,0.16);
+          vec3 rim=mix(vec3(0.60,0.66,0.96), vec3(0.98,0.80,0.50), clamp(uWarm,0.0,1.0));
+          vec3 iri=0.5+0.5*cos(6.28318*(vFres*1.3+vec3(0.0,0.33,0.66)));
+          vec3 col=mix(core,rim,vFres); col+=iri*vFres*0.28; col+=rim*pow(vFres,3.5)*0.9;
+          gl_FragColor=vec4(col,1.0);
         }`
     });
+    var orb=new THREE.Mesh(new THREE.IcosahedronGeometry(1.3,32), mat); scene.add(orb);
+    var core=new THREE.Mesh(new THREE.SphereGeometry(0.72,32,32), new THREE.MeshBasicMaterial({color:0x2a2350,transparent:true,opacity:0.5})); scene.add(core);
 
-    var geo = new THREE.IcosahedronGeometry(1.25, 32);
-    var orb = new THREE.Mesh(geo, mat);
-    orb.position.y = 0.55;   // lift above the hero copy
-    scene.add(orb);
+    var composer=new EffectComposer(renderer);
+    composer.addPass(new RenderPass(scene,camera));
+    composer.addPass(new UnrealBloomPass(new THREE.Vector2(innerWidth,innerHeight),0.6,0.6,0.68));
 
-    // faint inner glow core
-    var core = new THREE.Mesh(
-      new THREE.SphereGeometry(0.7, 32, 32),
-      new THREE.MeshBasicMaterial({ color:0x2a2350, transparent:true, opacity:0.5 })
-    );
-    core.position.copy(orb.position);
-    scene.add(core);
+    // symbolic states, one per section
+    var STATES=[
+      {spike:0.10,ripple:0.00,lump:0.12,warm:0.00,pulse:0.35}, // listening mind
+      {spike:0.16,ripple:0.00,lump:0.30,warm:0.03,pulse:0.20}, // dream (fragments)
+      {spike:0.46,ripple:0.00,lump:0.10,warm:0.00,pulse:0.10}, // shadow (spiked)
+      {spike:0.03,ripple:0.22,lump:0.03,warm:0.10,pulse:0.55}, // stillness (ripples)
+      {spike:0.10,ripple:0.00,lump:0.40,warm:0.30,pulse:0.30}, // commons (lobes)
+      {spike:0.05,ripple:0.05,lump:0.05,warm:1.00,pulse:0.80}  // return (golden)
+    ];
+    function lerp(a,b,f){return a+(b-a)*f;}
+    var tScroll=0,scrollN=0,tmx=0,tmy=0,mx=0,my=0,rail=document.getElementById('rail');
+    addEventListener('scroll',function(){var m=document.body.scrollHeight-innerHeight;tScroll=m>0?Math.min(scrollY/m,1):0;rail.style.width=(tScroll*100)+'%';},{passive:true});
+    addEventListener('mousemove',function(e){tmx=e.clientX/innerWidth-0.5;tmy=e.clientY/innerHeight-0.5;});
+    addEventListener('resize',function(){camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);composer.setSize(innerWidth,innerHeight);});
 
-    // drifting dust
-    var dustGeo = new THREE.BufferGeometry();
-    var N = 340, arr = new Float32Array(N*3);
-    for (var i=0;i<N;i++){ var r=3+Math.random()*6; var th=Math.random()*6.28, ph=Math.acos(2*Math.random()-1);
-      arr[i*3]=r*Math.sin(ph)*Math.cos(th); arr[i*3+1]=r*Math.sin(ph)*Math.sin(th); arr[i*3+2]=r*Math.cos(ph); }
-    dustGeo.setAttribute('position', new THREE.BufferAttribute(arr,3));
-    var dust = new THREE.Points(dustGeo, new THREE.PointsMaterial({ color:0x9AA6D4, size:0.02, transparent:true, opacity:0.6 }));
-    scene.add(dust);
-
-    var composer = new EffectComposer(renderer);
-    composer.addPass(new RenderPass(scene, camera));
-    var bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.62, 0.6, 0.68);
-    composer.addPass(bloom);
-
-    var tmx=0,tmy=0,mx=0,my=0,scrollN=0,tScroll=0;
-    addEventListener('mousemove', function(e){ tmx=(e.clientX/innerWidth-0.5); tmy=(e.clientY/innerHeight-0.5); });
-    addEventListener('scroll', function(){ var m=document.body.scrollHeight-innerHeight; tScroll=m>0?Math.min(scrollY/m,1):0; }, {passive:true});
-    addEventListener('resize', function(){ camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight); composer.setSize(innerWidth,innerHeight); });
-
-    var clock = new THREE.Clock();
-    function loop(){
-      requestAnimationFrame(loop);
-      var dt = clock.getDelta();
-      uniforms.uTime.value += reduce ? 0 : dt;
-      mx += (tmx-mx)*0.05; my += (tmy-my)*0.05; scrollN += (tScroll-scrollN)*0.06;
-      uniforms.uScroll.value = scrollN;
-      orb.rotation.y += 0.0016 + mx*0.04; orb.rotation.x = my*0.5;
-      core.rotation.copy(orb.rotation);
-      dust.rotation.y += 0.0004;
-      camera.position.z = 4.2 - scrollN*0.9;
+    var clock=new THREE.Clock();
+    function frame(){
+      requestAnimationFrame(frame);
+      u.uTime.value += reduce?0:clock.getDelta();
+      scrollN += (tScroll-scrollN)*0.07; mx+=(tmx-mx)*0.05; my+=(tmy-my)*0.05;
+      var seg=scrollN*(STATES.length-1), i=Math.min(STATES.length-2,Math.floor(seg)), f=seg-i;
+      var A=STATES[i],B=STATES[i+1];
+      u.uSpike.value=lerp(A.spike,B.spike,f); u.uRipple.value=lerp(A.ripple,B.ripple,f);
+      u.uLump.value=lerp(A.lump,B.lump,f); u.uWarm.value=lerp(A.warm,B.warm,f); u.uPulse.value=lerp(A.pulse,B.pulse,f);
+      orb.rotation.y+=0.0015+mx*0.03; orb.rotation.x=my*0.4; core.rotation.copy(orb.rotation);
       composer.render();
     }
-    loop();
-    // signal success
-    window.__pocOK = true;
-  } catch (err) {
-    console.error('POC 3D failed:', err);
-    document.getElementById('c').style.display='none';
-    document.getElementById('fallback').style.display='block';
-  }
+    frame();
+  } catch(err){ console.error('POC morph failed:',err); document.getElementById('c').style.display='none'; document.getElementById('fallback').style.display='block'; }
 </script>
 </body>
 </html>
