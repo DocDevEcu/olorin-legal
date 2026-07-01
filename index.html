@@ -30,9 +30,8 @@
   }
 
   /* ── backdrop layers ─────────────────────────────────────────── */
-  #gl, #stars { position: fixed; inset: 0; display: block; }
-  #gl { z-index: -4; }
-  #stars { z-index: -3; }
+  #form { position: fixed; inset: 0; display: block; z-index: -4; }
+  .scrim { position: fixed; inset: 0; z-index: -2; pointer-events: none; background: rgba(6,5,7,0.30); }
   .grain {
     position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: 0.04;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
@@ -187,11 +186,13 @@
     *, *::before, *::after { animation: none !important; scroll-behavior: auto; }
     .reveal { opacity: 1; transform: none; }
   }
+  h1, .promise h2, .final h2, .quote blockquote { text-shadow: 0 2px 40px rgba(0,0,0,.75); }
+  .sub, .promise p, .eyebrow, .kicker { text-shadow: 0 2px 24px rgba(0,0,0,.6); }
 </style>
 </head>
 <body>
-<canvas id="gl"></canvas>
-<canvas id="stars"></canvas>
+<canvas id="form"></canvas>
+<div class="scrim"></div>
 <div class="grain"></div>
 <div id="prog"></div>
 
@@ -205,9 +206,7 @@
 <!-- HERO -->
 <section class="hero">
   <div class="wrap">
-    <div class="portal reveal">
-      <div class="halo"></div><div class="ring"></div><div class="ring two"></div><div class="core"></div><div class="orbit"></div>
-    </div>
+    <div style="height:190px" aria-hidden="true" class="reveal"></div>
     <span class="eyebrow reveal">End-to-end encrypted · Depth psychology, reimagined</span>
     <h1 class="reveal">Your unconscious is speaking. <em>Learn to listen.</em></h1>
     <p class="sub reveal">A contemplative companion for catching your dreams, dialoguing with the figures of your psyche, and steadying the watching mind — grounded in a century of depth psychology, sealed on your device.</p>
@@ -322,67 +321,9 @@
 <script>
   var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  /* ── WebGL domain-warped nebula ──────────────────────────────── */
-  (function () {
-    var cv = document.getElementById('gl');
-    var gl = cv.getContext('webgl') || cv.getContext('experimental-webgl');
-    if (!gl || reduce) { cv.style.display = 'none'; return; }
-    var vs = 'attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}';
-    var fs = [
-      'precision highp float;',
-      'uniform vec2 u_res; uniform float u_time;',
-      'float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}',
-      'float noise(vec2 p){vec2 i=floor(p),f=fract(p);float a=hash(i),b=hash(i+vec2(1,0)),c=hash(i+vec2(0,1)),d=hash(i+vec2(1,1));vec2 u=f*f*(3.-2.*f);return mix(mix(a,b,u.x),mix(c,d,u.x),u.y);}',
-      'float fbm(vec2 p){float v=0.,a=.5;mat2 m=mat2(1.6,1.2,-1.2,1.6);for(int i=0;i<6;i++){v+=a*noise(p);p=m*p;a*=.5;}return v;}',
-      'void main(){',
-      ' vec2 p=(gl_FragCoord.xy-.5*u_res.xy)/u_res.y;',
-      ' float t=u_time*0.045;',
-      ' vec2 q=vec2(fbm(p*1.5+vec2(0.,t)),fbm(p*1.5+vec2(5.2,1.3)-t));',
-      ' vec2 r=vec2(fbm(p*1.5+4.*q+vec2(1.7,9.2)+t*.5),fbm(p*1.5+4.*q+vec2(8.3,2.8)));',
-      ' float f=fbm(p*1.5+4.*r);',
-      ' vec3 c1=vec3(.035,.031,.043),c2=vec3(.42,.36,.88),c3=vec3(.60,.65,.83),c4=vec3(.83,.75,.60);',
-      ' vec3 col=mix(c1,c2,clamp(f*f*1.7,0.,1.));',
-      ' col=mix(col,c3,clamp(length(q)*.7,0.,1.));',
-      ' col=mix(col,c4,clamp(r.x*r.x*.5,0.,1.));',
-      ' col*=0.42;',
-      ' float vig=smoothstep(1.25,.2,length(p)); col*=mix(.45,1.,vig);',
-      ' gl_FragColor=vec4(col,1.);',
-      '}'
-    ].join('\n');
-    function sh(t, s) { var o = gl.createShader(t); gl.shaderSource(o, s); gl.compileShader(o); return o; }
-    var pr = gl.createProgram();
-    gl.attachShader(pr, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, fs));
-    gl.linkProgram(pr); gl.useProgram(pr);
-    var buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,1,1]), gl.STATIC_DRAW);
-    var loc = gl.getAttribLocation(pr, 'p'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
-    var uRes = gl.getUniformLocation(pr, 'u_res'), uT = gl.getUniformLocation(pr, 'u_time');
-    var DPR = Math.min(devicePixelRatio || 1, 1.4);
-    function resize() { cv.width = innerWidth * DPR; cv.height = innerHeight * DPR; cv.style.width = innerWidth+'px'; cv.style.height = innerHeight+'px'; gl.viewport(0,0,cv.width,cv.height); }
-    resize(); addEventListener('resize', resize);
-    var run = true; document.addEventListener('visibilitychange', function(){ run = !document.hidden; if(run) draw(0); });
-    function draw(ms) { if(!run) return; gl.uniform2f(uRes, cv.width, cv.height); gl.uniform1f(uT, ms*0.001); gl.drawArrays(gl.TRIANGLE_STRIP,0,4); requestAnimationFrame(draw); }
-    requestAnimationFrame(draw);
-  })();
-
-  /* ── light starfield overlay ─────────────────────────────────── */
-  (function () {
-    var c = document.getElementById('stars'), x = c.getContext('2d'), stars = [], W, H, DPR = Math.min(devicePixelRatio||1, 2);
-    if (reduce) { c.style.display='none'; return; }
-    function resize(){ W=c.width=innerWidth*DPR; H=c.height=innerHeight*DPR; c.style.width=innerWidth+'px'; c.style.height=innerHeight+'px';
-      var n=Math.min(110, Math.round(innerWidth*innerHeight/14000)); stars=[];
-      for(var i=0;i<n;i++) stars.push({x:Math.random()*W,y:Math.random()*H,r:(Math.random()*1.1+0.25)*DPR,a:Math.random(),s:Math.random()*0.012+0.003,t:Math.random()>0.85}); }
-    var run=true; document.addEventListener('visibilitychange', function(){ run=!document.hidden; if(run) tick(); });
-    function tick(){ if(!run) return; x.clearRect(0,0,W,H);
-      for(var i=0;i<stars.length;i++){ var s=stars[i]; s.a+=s.s; var al=0.3+Math.abs(Math.sin(s.a))*0.5;
-        x.beginPath(); x.arc(s.x,s.y,s.r,0,6.28); x.fillStyle=s.t?'rgba(154,166,212,'+al+')':'rgba(240,233,220,'+al+')'; x.fill();
-        s.y+=0.015*DPR; if(s.y>H)s.y=0; } requestAnimationFrame(tick); }
-    resize(); tick(); addEventListener('resize', resize);
-  })();
-
   /* ── scroll progress + reveals ───────────────────────────────── */
   var prog = document.getElementById('prog');
-  addEventListener('scroll', function(){ var h=document.documentElement; prog.style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%'; }, {passive:true});
+  addEventListener('scroll', function(){ var h=document.documentElement, m=h.scrollHeight-h.clientHeight; var pr=m>0?h.scrollTop/m:0; prog.style.width=(pr*100)+'%'; window.__scrollProg=pr; }, {passive:true});
   (function(){ var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{threshold:0.12});
     document.querySelectorAll('.reveal').forEach(function(el,i){ el.style.transitionDelay=(Math.min(i%6,4)*0.06)+'s'; io.observe(el); }); })();
 
@@ -404,5 +345,98 @@
     });
   }
 </script>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+}}
+</script>
+<script type="module">
+  // Living centerpiece: one 3D form, fixed behind the landing, morphing through
+  // symbolic states as you scroll (listening -> dream -> shadow -> stillness ->
+  // commons -> golden return) and warming to gold at the final CTA. Dimmed so
+  // the conversion copy stays legible; it is atmosphere, not the message.
+  import * as THREE from 'three';
+  import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+  import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+  import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+  var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  try {
+    if (reduce) throw new Error('reduced-motion');
+    var canvas = document.getElementById('form');
+    var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5)); renderer.setSize(innerWidth, innerHeight);
+    renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 0.92;
+    var scene = new THREE.Scene();
+    var camera = new THREE.PerspectiveCamera(45, innerWidth/innerHeight, 0.1, 100); camera.position.z = 5.7;
+    var NOISE = `
+      vec4 permute(vec4 x){return mod(((x*34.0)+1.0)*x,289.0);}
+      vec4 taylorInvSqrt(vec4 r){return 1.79284291400159-0.85373472095314*r;}
+      float snoise(vec3 v){const vec2 C=vec2(1.0/6.0,1.0/3.0);const vec4 D=vec4(0.0,0.5,1.0,2.0);
+        vec3 i=floor(v+dot(v,C.yyy));vec3 x0=v-i+dot(i,C.xxx);
+        vec3 g=step(x0.yzx,x0.xyz);vec3 l=1.0-g;vec3 i1=min(g.xyz,l.zxy);vec3 i2=max(g.xyz,l.zxy);
+        vec3 x1=x0-i1+C.xxx;vec3 x2=x0-i2+2.0*C.xxx;vec3 x3=x0-1.0+3.0*C.xxx;i=mod(i,289.0);
+        vec4 p=permute(permute(permute(i.z+vec4(0.0,i1.z,i2.z,1.0))+i.y+vec4(0.0,i1.y,i2.y,1.0))+i.x+vec4(0.0,i1.x,i2.x,1.0));
+        float n_=1.0/7.0;vec3 ns=n_*D.wyz-D.xzx;vec4 j=p-49.0*floor(p*ns.z*ns.z);
+        vec4 x_=floor(j*ns.z);vec4 y_=floor(j-7.0*x_);vec4 x=x_*ns.x+ns.yyyy;vec4 y=y_*ns.x+ns.yyyy;vec4 h=1.0-abs(x)-abs(y);
+        vec4 b0=vec4(x.xy,y.xy);vec4 b1=vec4(x.zw,y.zw);vec4 s0=floor(b0)*2.0+1.0;vec4 s1=floor(b1)*2.0+1.0;vec4 sh=-step(h,vec4(0.0));
+        vec4 a0=b0.xzyw+s0.xzyw*sh.xxyy;vec4 a1=b1.xzyw+s1.xzyw*sh.zzww;
+        vec3 p0=vec3(a0.xy,h.x);vec3 p1=vec3(a0.zw,h.y);vec3 p2=vec3(a1.xy,h.z);vec3 p3=vec3(a1.zw,h.w);
+        vec4 norm=taylorInvSqrt(vec4(dot(p0,p0),dot(p1,p1),dot(p2,p2),dot(p3,p3)));p0*=norm.x;p1*=norm.y;p2*=norm.z;p3*=norm.w;
+        vec4 m=max(0.6-vec4(dot(x0,x0),dot(x1,x1),dot(x2,x2),dot(x3,x3)),0.0);m=m*m;
+        return 42.0*dot(m*m,vec4(dot(p0,x0),dot(p1,x1),dot(p2,x2),dot(p3,x3)));}`;
+    var u = { uTime:{value:0}, uSpike:{value:0.1}, uRipple:{value:0.0}, uLump:{value:0.12}, uWarm:{value:0.0}, uPulse:{value:0.3} };
+    var mat = new THREE.ShaderMaterial({ uniforms:u,
+      vertexShader: NOISE + `
+        uniform float uTime,uSpike,uRipple,uLump,uPulse; varying float vFres;
+        void main(){ vec3 nrm=normalize(position); float t=uTime*0.3; float d=0.0;
+          d += uLump  * snoise(nrm*1.4 + vec3(0.0,0.0,t*0.7));
+          d += uSpike * (snoise(nrm*3.6 + vec3(t*0.6))*0.6 + snoise(nrm*6.5 - vec3(t*0.4))*0.4);
+          d += uRipple* sin(nrm.y*9.0 - t*2.2)*0.5;
+          vec3 pos = position + normal*d; pos *= 1.0 + uPulse*sin(t*1.4)*0.05;
+          vec4 mv=modelViewMatrix*vec4(pos,1.0); vec3 n=normalize(normalMatrix*normal); vec3 vd=normalize(-mv.xyz);
+          vFres=pow(1.0-max(dot(n,vd),0.0),2.4); gl_Position=projectionMatrix*mv; }`,
+      fragmentShader: `
+        uniform float uWarm; varying float vFres;
+        void main(){ vec3 core=vec3(0.06,0.05,0.14);
+          vec3 rim=mix(vec3(0.58,0.64,0.95), vec3(1.0,0.78,0.42), clamp(uWarm,0.0,1.0));
+          vec3 iri=0.5+0.5*cos(6.28318*(vFres*1.3+vec3(0.0,0.33,0.66)));
+          vec3 col=mix(core,rim,vFres); col+=iri*vFres*0.26; col+=rim*pow(vFres,3.5)*0.85;
+          gl_FragColor=vec4(col,1.0); }`
+    });
+    var orb = new THREE.Mesh(new THREE.IcosahedronGeometry(1.3, 32), mat); scene.add(orb);
+    var core = new THREE.Mesh(new THREE.SphereGeometry(0.72,32,32), new THREE.MeshBasicMaterial({color:0x241f44,transparent:true,opacity:0.5})); scene.add(core);
+    var composer = new EffectComposer(renderer);
+    composer.addPass(new RenderPass(scene, camera));
+    composer.addPass(new UnrealBloomPass(new THREE.Vector2(innerWidth,innerHeight), 0.5, 0.6, 0.72));
+    var STATES = [
+      {spike:0.10,ripple:0.00,lump:0.12,warm:0.00,pulse:0.35},
+      {spike:0.16,ripple:0.00,lump:0.30,warm:0.02,pulse:0.20},
+      {spike:0.44,ripple:0.00,lump:0.10,warm:0.00,pulse:0.10},
+      {spike:0.03,ripple:0.22,lump:0.03,warm:0.10,pulse:0.55},
+      {spike:0.10,ripple:0.00,lump:0.40,warm:0.30,pulse:0.30},
+      {spike:0.05,ripple:0.05,lump:0.05,warm:1.00,pulse:0.80}
+    ];
+    function lerp(a,b,f){return a+(b-a)*f;}
+    var sN=0, tmx=0,tmy=0,mx=0,my=0;
+    addEventListener('mousemove', function(e){ tmx=e.clientX/innerWidth-0.5; tmy=e.clientY/innerHeight-0.5; });
+    addEventListener('resize', function(){ camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight); composer.setSize(innerWidth,innerHeight); });
+    var clock = new THREE.Clock(), run = true;
+    document.addEventListener('visibilitychange', function(){ run=!document.hidden; if(run) frame(); });
+    function frame(){ if(!run) return; requestAnimationFrame(frame);
+      u.uTime.value += clock.getDelta();
+      var target = window.__scrollProg || 0; sN += (target - sN)*0.07; mx+=(tmx-mx)*0.05; my+=(tmy-my)*0.05;
+      var seg = sN*(STATES.length-1), i=Math.min(STATES.length-2, Math.floor(seg)), f=seg-i, A=STATES[i], B=STATES[i+1];
+      u.uSpike.value=lerp(A.spike,B.spike,f); u.uRipple.value=lerp(A.ripple,B.ripple,f);
+      u.uLump.value=lerp(A.lump,B.lump,f); u.uWarm.value=lerp(A.warm,B.warm,f); u.uPulse.value=lerp(A.pulse,B.pulse,f);
+      orb.rotation.y += 0.0014 + mx*0.03; orb.rotation.x = my*0.4; core.rotation.copy(orb.rotation);
+      composer.render(); }
+    frame();
+  } catch (err) {
+    var el = document.getElementById('form'); if (el) el.style.display='none';
+    var s = document.querySelector('.scrim'); if (s) s.style.background='radial-gradient(ellipse at 50% 34%, rgba(40,32,74,0.5), rgba(6,5,7,0.9) 70%)';
+  }
+</script>
+
 </body>
 </html>
