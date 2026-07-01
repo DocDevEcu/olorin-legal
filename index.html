@@ -324,8 +324,13 @@
   /* ── scroll progress + reveals ───────────────────────────────── */
   var prog = document.getElementById('prog');
   addEventListener('scroll', function(){ var h=document.documentElement, m=h.scrollHeight-h.clientHeight; var pr=m>0?h.scrollTop/m:0; prog.style.width=(pr*100)+'%'; window.__scrollProg=pr; }, {passive:true});
-  (function(){ var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{threshold:0.12});
-    document.querySelectorAll('.reveal').forEach(function(el,i){ el.style.transitionDelay=(Math.min(i%6,4)*0.06)+'s'; io.observe(el); }); })();
+  (function(){
+    var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{threshold:0.12});
+    var els=document.querySelectorAll('.reveal');
+    els.forEach(function(el,i){ el.style.transitionDelay=(Math.min(i%6,4)*0.06)+'s';
+      if(el.getBoundingClientRect().top < innerHeight*0.95){ el.classList.add('in'); } else { io.observe(el); } });
+    setTimeout(function(){ els.forEach(function(el){ el.classList.add('in'); }); }, 2500);
+  })();
 
   /* ── 3D tilt + cursor spotlight on cards ─────────────────────── */
   if (!reduce && matchMedia('(hover:hover)').matches) {
