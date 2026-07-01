@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="index, follow">
+<title>Privacy Policy — Olorin</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: #09080A;
+    color: #D0C8B8;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.62;
+    font-size: 17px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 56px 24px 96px; }
+  h1 {
+    font-weight: 300;
+    font-size: 34px;
+    letter-spacing: -0.4px;
+    color: #F0E9DC;
+    margin: 0 0 6px;
+  }
+  h2 {
+    font-size: 13px;
+    letter-spacing: 1.8px;
+    text-transform: uppercase;
+    color: #8B8374;
+    margin: 44px 0 10px;
+    font-weight: 600;
+  }
+  .updated { color: #8B8374; font-style: italic; font-size: 15px; margin: 0 0 8px; }
+  p { margin: 0 0 16px; }
+  ul { margin: 0 0 16px; padding-left: 22px; }
+  li { margin: 0 0 10px; }
+  strong { color: #EDE6D8; font-weight: 600; }
+  a { color: #9AA6D4; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .lede { color: #B8B0A0; }
+  hr { border: none; border-top: 1px solid #26221C; margin: 40px 0; }
+  footer { color: #6A6256; font-size: 14px; margin-top: 48px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Privacy Policy</h1>
+  <p class="updated">Last updated: 1 July 2026</p>
+  <p class="lede">Olorin ("Olorin", "we", "us") is a contemplative inner-work app for journaling, dreamwork, and reflective practice. This policy explains what we collect, how it is protected, and the choices you have. Please read it alongside our <a href="https://olorin.health/terms">Terms of Use</a>.</p>
+
+  <h2>The short version</h2>
+  <ul>
+    <li>Your journal and dream content is <strong>end-to-end encrypted on your device</strong>. We store only unreadable ciphertext and cannot read it — not even to help you.</li>
+    <li>We do <strong>not</strong> sell your data or use it for advertising.</li>
+    <li>Some features send the specific text you choose to interpret to AI providers at the moment you invoke them (see "AI features").</li>
+    <li>Anything you deliberately publish to <strong>the Commons</strong> is public and is not encrypted.</li>
+    <li>You can delete your account and all associated data from within the app at any time.</li>
+  </ul>
+
+  <h2>What we collect</h2>
+  <p><strong>Account information.</strong> When you create an account we store your email address (or Apple/Google sign-in identifier) and an internal account ID. This identity is never shown to other users.</p>
+  <p><strong>Your private entries (encrypted).</strong> Journal entries, dream entries, dream conversations, interpretations, tags, images, and inner-dialogue sessions are encrypted on your device with a key held only on your device (in the iOS Keychain). Our servers store only ciphertext. Limited metadata is stored in readable form so the app can function: timestamps, mood selections, song choices, and the names you give inner figures.</p>
+  <p><strong>Commons (public) content.</strong> If you create a public presence and publish a dream or comment, that content — including any text, images, and your chosen public handle and display name — is stored in readable form and shown to others according to the audience you select (everyone, close friends, or followers).</p>
+  <p><strong>Technical data.</strong> Basic operational data needed to run the service (e.g. authentication tokens and error logs).</p>
+
+  <h2>How your private content is protected</h2>
+  <p>Your encryption key is generated on your device and stored in the iOS Keychain. It is never transmitted to our servers. It travels only inside your device's own encrypted backup, and you may export it as a recovery code that you keep. If you lose your device and your backup and your recovery code, your encrypted entries cannot be recovered by anyone, including us. This is the deliberate trade that end-to-end encryption makes.</p>
+
+  <h2>AI features</h2>
+  <p>When you request an AI action — such as a dream interpretation, a generated image, tags, or a dialogue reply — the specific content you are acting on is transmitted, encrypted in transit, to our AI processing providers (currently <strong>Anthropic</strong> and <strong>OpenAI</strong>) to generate the result. The result is returned and stored encrypted. These providers process the content to produce your result and do not use it to train their models under our configuration. Features you do not use send nothing.</p>
+
+  <h2>Data storage and processors</h2>
+  <p>We use <strong>Supabase</strong> (database, authentication, storage) as our backend infrastructure provider, and the AI providers named above. These processors act on our behalf and are bound to protect the data they handle.</p>
+
+  <h2>Your choices and rights</h2>
+  <ul>
+    <li><strong>Delete your account.</strong> In the app, open Privacy → "Delete my account". This permanently erases your account and all associated data, including Commons content and stored files. Because encrypted entries can only be read with your key, deletion is irreversible.</li>
+    <li><strong>Access and correction.</strong> You can view and edit your content in the app.</li>
+    <li><strong>Contact us</strong> at <a href="mailto:support@olorin.health">support@olorin.health</a> with any privacy request.</li>
+  </ul>
+
+  <h2>Children</h2>
+  <p>Olorin is not directed to children. You must be at least 17 years old to use it.</p>
+
+  <h2>Health data</h2>
+  <p>Olorin does not currently read from or write to Apple Health or any other health data source.</p>
+
+  <h2>Changes</h2>
+  <p>We may update this policy; material changes will be reflected by the "last updated" date above.</p>
+
+  <h2>Contact</h2>
+  <p>Questions about this policy: <a href="mailto:support@olorin.health">support@olorin.health</a>.</p>
+
+  <footer>© 2026 Olorin</footer>
+</div>
+</body>
+</html>
