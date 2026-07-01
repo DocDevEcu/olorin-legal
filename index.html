@@ -358,10 +358,10 @@
 }}
 </script>
 <script type="module">
-  // Living centerpiece: one 3D form, fixed behind the landing, morphing through
-  // symbolic states as you scroll (listening -> dream -> shadow -> stillness ->
-  // commons -> golden return) and warming to gold at the final CTA. Dimmed so
-  // the conversion copy stays legible; it is atmosphere, not the message.
+  // Living centerpiece: ONE mesh that changes SILHOUETTE per scroll section —
+  // sphere -> crescent moon -> jagged shard -> concentric mandala -> cluster ->
+  // radiant sun. Distinct forms (not a blob), with flowing motion, rotation and a
+  // pulsing corona. Dimmed behind the copy; warms to gold at the CTA.
   import * as THREE from 'three';
   import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
   import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
@@ -372,9 +372,9 @@
     var canvas = document.getElementById('form');
     var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5)); renderer.setSize(innerWidth, innerHeight);
-    renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 0.92;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 0.98;
     var scene = new THREE.Scene();
-    var camera = new THREE.PerspectiveCamera(45, innerWidth/innerHeight, 0.1, 100); camera.position.z = 5.7;
+    var camera = new THREE.PerspectiveCamera(45, innerWidth/innerHeight, 0.1, 100); camera.position.z = 6.3;
     var NOISE = `
       vec4 permute(vec4 x){return mod(((x*34.0)+1.0)*x,289.0);}
       vec4 taylorInvSqrt(vec4 r){return 1.79284291400159-0.85373472095314*r;}
@@ -391,51 +391,66 @@
         vec4 norm=taylorInvSqrt(vec4(dot(p0,p0),dot(p1,p1),dot(p2,p2),dot(p3,p3)));p0*=norm.x;p1*=norm.y;p2*=norm.z;p3*=norm.w;
         vec4 m=max(0.6-vec4(dot(x0,x0),dot(x1,x1),dot(x2,x2),dot(x3,x3)),0.0);m=m*m;
         return 42.0*dot(m*m,vec4(dot(p0,x0),dot(p1,x1),dot(p2,x2),dot(p3,x3)));}`;
-    var u = { uTime:{value:0}, uSpike:{value:0.1}, uRipple:{value:0.0}, uLump:{value:0.12}, uWarm:{value:0.0}, uPulse:{value:0.3} };
+    var u = { uTime:{value:0}, uP:{value:0} };
     var mat = new THREE.ShaderMaterial({ uniforms:u,
       vertexShader: NOISE + `
-        uniform float uTime,uSpike,uRipple,uLump,uPulse; varying float vFres;
-        void main(){ vec3 nrm=normalize(position); float t=uTime*0.3; float d=0.0;
-          d += uLump  * snoise(nrm*1.4 + vec3(0.0,0.0,t*0.7));
-          d += uSpike * (snoise(nrm*3.6 + vec3(t*0.6))*0.6 + snoise(nrm*6.5 - vec3(t*0.4))*0.4);
-          d += uRipple* sin(nrm.y*9.0 - t*2.2)*0.5;
-          vec3 pos = position + normal*d; pos *= 1.0 + uPulse*sin(t*1.4)*0.05;
-          vec4 mv=modelViewMatrix*vec4(pos,1.0); vec3 n=normalize(normalMatrix*normal); vec3 vd=normalize(-mv.xyz);
-          vFres=pow(1.0-max(dot(n,vd),0.0),2.4); gl_Position=projectionMatrix*mv; }`,
+        uniform float uTime, uP;
+        varying float vFres; varying vec3 vDir; varying float vW1; varying float vW5;
+        float wOf(float p, float i){ return max(0.0, 1.0 - abs(p - i)); }
+        void main(){
+          vec3 dir = normalize(position); float t = uTime;
+          float w0=wOf(uP,0.),w1=wOf(uP,1.),w2=wOf(uP,2.),w3=wOf(uP,3.),w4=wOf(uP,4.),w5=wOf(uP,5.);
+          float r0 = 1.0 + 0.07*snoise(dir*2.0 + vec3(0.,0.,t*0.6));
+          float r1 = 1.0 + 0.05*snoise(dir*2.0 + vec3(t*0.5));
+          float r2 = 1.0 + 0.60*abs(snoise(dir*3.3 + vec3(t*0.8)));
+          float rad = acos(clamp(dir.z,-1.,1.));
+          float r3 = 1.0 + 0.16*sin(rad*11.0 - t*2.4);
+          float r4 = 1.0 + 0.46*snoise(dir*1.3 + vec3(t*0.7));
+          float ang = atan(dir.y, dir.x);
+          float rays = pow(max(0.0, sin(ang*13.0 + snoise(dir*3.0))), 6.0);
+          float r5 = 1.0 + rays*0.75*(0.6+0.4*sin(t*2.6)) + 0.05*snoise(dir*2.0+t);
+          float radius = w0*r0 + w1*r1 + w2*r2 + w3*r3 + w4*r4 + w5*r5;
+          vec3 pos = dir * radius;
+          pos.z *= mix(1.0, 0.26, w3);               // mandala flattens to a disc
+          pos *= 1.0 + 0.035*sin(t*1.3);             // breathe
+          vec4 mv = modelViewMatrix * vec4(pos,1.0);
+          vec3 n = normalize(normalMatrix * normal); vec3 vd = normalize(-mv.xyz);
+          vFres = pow(1.0 - max(dot(n,vd),0.0), 2.3);
+          vDir = dir; vW1 = w1; vW5 = w5;
+          gl_Position = projectionMatrix * mv;
+        }`,
       fragmentShader: `
-        uniform float uWarm; varying float vFres;
-        void main(){ vec3 core=vec3(0.06,0.05,0.14);
-          vec3 rim=mix(vec3(0.58,0.64,0.95), vec3(1.0,0.78,0.42), clamp(uWarm,0.0,1.0));
-          vec3 iri=0.5+0.5*cos(6.28318*(vFres*1.3+vec3(0.0,0.33,0.66)));
-          vec3 col=mix(core,rim,vFres); col+=iri*vFres*0.26; col+=rim*pow(vFres,3.5)*0.85;
-          gl_FragColor=vec4(col,1.0); }`
+        uniform float uP;
+        varying float vFres; varying vec3 vDir; varying float vW1; varying float vW5;
+        void main(){
+          float warm = smoothstep(3.4, 5.0, uP);
+          vec3 core = vec3(0.06,0.05,0.14);
+          vec3 rim = mix(vec3(0.58,0.64,0.95), vec3(1.0,0.74,0.36), warm);
+          vec3 iri = 0.5+0.5*cos(6.28318*(vFres*1.3+vec3(0.0,0.33,0.66)));
+          vec3 col = mix(core, rim, vFres); col += iri*vFres*0.26; col += rim*pow(vFres,3.4)*0.9;
+          // crescent moon shading when w1 high
+          float lit = smoothstep(-0.12, 0.28, dot(normalize(vDir), normalize(vec3(0.65,0.2,0.55))));
+          col = mix(col, col*mix(0.10, 1.05, lit), vW1);
+          // radiant sun emission when w5 high
+          col += vec3(1.0,0.68,0.30) * pow(vFres,2.0) * vW5 * 0.9;
+          gl_FragColor = vec4(col, 1.0);
+        }`
     });
-    var orb = new THREE.Mesh(new THREE.IcosahedronGeometry(1.3, 32), mat); scene.add(orb);
-    var core = new THREE.Mesh(new THREE.SphereGeometry(0.72,32,32), new THREE.MeshBasicMaterial({color:0x241f44,transparent:true,opacity:0.5})); scene.add(core);
+    var orb = new THREE.Mesh(new THREE.IcosahedronGeometry(1.15, 40), mat); scene.add(orb);
+    var core = new THREE.Mesh(new THREE.SphereGeometry(0.62,32,32), new THREE.MeshBasicMaterial({color:0x241f44,transparent:true,opacity:0.45})); scene.add(core);
     var composer = new EffectComposer(renderer);
     composer.addPass(new RenderPass(scene, camera));
-    composer.addPass(new UnrealBloomPass(new THREE.Vector2(innerWidth,innerHeight), 0.5, 0.6, 0.72));
-    var STATES = [
-      {spike:0.10,ripple:0.00,lump:0.12,warm:0.00,pulse:0.35},
-      {spike:0.16,ripple:0.00,lump:0.30,warm:0.02,pulse:0.20},
-      {spike:0.44,ripple:0.00,lump:0.10,warm:0.00,pulse:0.10},
-      {spike:0.03,ripple:0.22,lump:0.03,warm:0.10,pulse:0.55},
-      {spike:0.10,ripple:0.00,lump:0.40,warm:0.30,pulse:0.30},
-      {spike:0.05,ripple:0.05,lump:0.05,warm:1.00,pulse:0.80}
-    ];
-    function lerp(a,b,f){return a+(b-a)*f;}
+    composer.addPass(new UnrealBloomPass(new THREE.Vector2(innerWidth,innerHeight), 0.5, 0.6, 0.7));
     var sN=0, tmx=0,tmy=0,mx=0,my=0;
     addEventListener('mousemove', function(e){ tmx=e.clientX/innerWidth-0.5; tmy=e.clientY/innerHeight-0.5; });
     addEventListener('resize', function(){ camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight); composer.setSize(innerWidth,innerHeight); });
     var clock = new THREE.Clock(), run = true;
     document.addEventListener('visibilitychange', function(){ run=!document.hidden; if(run) frame(); });
     function frame(){ if(!run) return; requestAnimationFrame(frame);
-      u.uTime.value += clock.getDelta();
-      var target = window.__scrollProg || 0; sN += (target - sN)*0.07; mx+=(tmx-mx)*0.05; my+=(tmy-my)*0.05;
-      var seg = sN*(STATES.length-1), i=Math.min(STATES.length-2, Math.floor(seg)), f=seg-i, A=STATES[i], B=STATES[i+1];
-      u.uSpike.value=lerp(A.spike,B.spike,f); u.uRipple.value=lerp(A.ripple,B.ripple,f);
-      u.uLump.value=lerp(A.lump,B.lump,f); u.uWarm.value=lerp(A.warm,B.warm,f); u.uPulse.value=lerp(A.pulse,B.pulse,f);
-      orb.rotation.y += 0.0014 + mx*0.03; orb.rotation.x = my*0.4; core.rotation.copy(orb.rotation);
+      u.uTime.value += clock.getDelta()*0.9;
+      var target = (window.__scrollProg || 0) * 5.0; sN += (target - sN)*0.06; u.uP.value = sN;
+      mx += (tmx-mx)*0.05; my += (tmy-my)*0.05;
+      orb.rotation.y += 0.006 + mx*0.04; orb.rotation.x = 0.2 + my*0.5; core.rotation.copy(orb.rotation);
       composer.render(); }
     frame();
   } catch (err) {
