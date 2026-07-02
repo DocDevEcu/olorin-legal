@@ -17,7 +17,7 @@
   :root {
     color-scheme: dark;
     --bg: #09080A; --ink: #CFC7B7; --ink-bright: #F1EADC;
-    --muted: #8B8374; --faint: #6A6256;
+    --muted: #A39B89; --faint: #6A6256;
     --periwinkle: #9AA6D4; --gold: #D4C09A; --violet: #6C5CE0;
     --line: #1C1A22; --maxw: 1080px;
   }
@@ -31,7 +31,8 @@
 
   /* ── backdrop layers ─────────────────────────────────────────── */
   #form { position: fixed; inset: 0; display: block; z-index: -4; }
-  .scrim { position: fixed; inset: 0; z-index: -2; pointer-events: none; background: rgba(6,5,7,0.37); }
+  .scrim { position: fixed; inset: 0; z-index: -2; pointer-events: none;
+    background: radial-gradient(ellipse 90% 70% at 50% 46%, rgba(6,5,7,0.52), rgba(6,5,7,0.40) 70%); }
   .grain {
     position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: 0.04;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
@@ -183,12 +184,29 @@
     .preview { grid-template-columns: 1fr; gap: 40px; }
     .hero { padding: 70px 0 60px; } .band { padding: 74px 0; }
   }
+  @media (max-width: 640px) {
+    body { font-size: 16px; }
+    .wrap { padding: 0 20px; }
+    nav .wrap { height: 58px; }
+    .nav-cta { font-size: 13px; padding: 8px 15px; }
+    .hero { padding: 54px 0 56px; }
+    .hero [aria-hidden="true"] { height: 120px !important; }
+    .sub { font-size: 16px; }
+    .btn-primary { width: 100%; max-width: 340px; text-align: center; padding: 16px 24px; }
+    .cta-row { flex-direction: column; gap: 14px; }
+    .band { padding: 60px 0; }
+    .card { padding: 26px 22px; }
+    .quote { padding: 80px 20px; }
+    .final { padding: 90px 20px 100px; }
+    .phone { width: 260px; height: 528px; }
+    .scrim { background: radial-gradient(ellipse 120% 70% at 50% 46%, rgba(6,5,7,0.60), rgba(6,5,7,0.46) 75%); }
+  }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; scroll-behavior: auto; }
     .reveal { opacity: 1; transform: none; }
   }
-  h1, .promise h2, .final h2, .quote blockquote { text-shadow: 0 2px 40px rgba(0,0,0,.75); }
-  .sub, .promise p, .eyebrow, .kicker { text-shadow: 0 2px 24px rgba(0,0,0,.6); }
+  h1, h2, .quote blockquote { text-shadow: 0 1px 3px rgba(0,0,0,.9), 0 2px 44px rgba(0,0,0,.85); }
+  .sub, .promise p, .lead, .eyebrow, .kicker, .trust, .card p, .step p, .pronounce { text-shadow: 0 1px 2px rgba(0,0,0,.85), 0 2px 22px rgba(0,0,0,.65); }
 </style>
 </head>
 <body>
@@ -371,10 +389,11 @@
     if (reduce) throw new Error('reduced-motion');
     var canvas = document.getElementById('form');
     var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
-    renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5)); renderer.setSize(innerWidth, innerHeight);
-    renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 0.9;
+    var isMobile = Math.min(innerWidth, innerHeight) < 640;
+    renderer.setPixelRatio(Math.min(devicePixelRatio, isMobile ? 1.25 : 1.5)); renderer.setSize(innerWidth, innerHeight);
+    renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 0.78;
     var scene = new THREE.Scene();
-    var camera = new THREE.PerspectiveCamera(45, innerWidth/innerHeight, 0.1, 100); camera.position.z = 6.3;
+    var camera = new THREE.PerspectiveCamera(45, innerWidth/innerHeight, 0.1, 100); camera.position.z = isMobile ? 8.2 : 6.3;
     var NOISE = `
       vec4 permute(vec4 x){return mod(((x*34.0)+1.0)*x,289.0);}
       vec4 taylorInvSqrt(vec4 r){return 1.79284291400159-0.85373472095314*r;}
@@ -434,7 +453,7 @@
           gl_FragColor = vec4(col, 1.0);
         }`
     });
-    var orb = new THREE.Mesh(new THREE.IcosahedronGeometry(1.15, 40), mat); scene.add(orb);
+    var orb = new THREE.Mesh(new THREE.IcosahedronGeometry(1.15, isMobile ? 24 : 40), mat); scene.add(orb);
     var core = new THREE.Mesh(new THREE.SphereGeometry(0.62,32,32), new THREE.MeshBasicMaterial({color:0x241f44,transparent:true,opacity:0.45})); scene.add(core);
     var composer = new EffectComposer(renderer);
     composer.addPass(new RenderPass(scene, camera));
